@@ -6,6 +6,8 @@ I've been eagerly awaiting [Gitea's PR 20311](https://github.com/go-gitea/gitea/
 
 > **Blunt disclaimer:** This is a hobby project, and I hope the PR above will be merged and implemented soon. When it is, this project will have served its purpose. I created it from scratch using [Cursor](https://cursor.com/) and [Claude 3.7 Sonnet](https://www.anthropic.com/claude/sonnet).
 
+![Main screenshot](images/main.png)
+
 ## Features
 
 - Web UI for managing mirrors and viewing logs [screens and more info](#web-ui)
