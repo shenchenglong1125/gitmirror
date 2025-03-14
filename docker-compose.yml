@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+      - ./config.json:/app/config.json
+      - ./data/config:/app/data/config
+    env_file:
+      - .env
+    command: web
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  mirror:
+    build: .
+    volumes:
+      - ./logs:/app/logs
+      - ./config.json:/app/config.json
+      - ./data/config:/app/data/config
+    env_file:
+      - .env
+    command: mirror
+    restart: "no" 

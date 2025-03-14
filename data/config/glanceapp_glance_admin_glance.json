@@ -1,0 +1,16 @@
+{
+  "mirror_metadata": true,
+  "mirror_issues": true,
+  "mirror_pull_requests": true,
+  "mirror_labels": true,
+  "mirror_milestones": true,
+  "mirror_wiki": true,
+  "mirror_releases": true,
+  "last_mirror_timestamp": 1741934040,
+  "last_mirror_date": "2025-03-14 06:34:00",
+  "last_mirror_status": "warning",
+  "last_mirror_messages": [
+    "Failed to mirror wiki: Wiki mirroring failed"
+  ],
+  "last_mirror_log": "mirror-2025-03-14.log"
+}

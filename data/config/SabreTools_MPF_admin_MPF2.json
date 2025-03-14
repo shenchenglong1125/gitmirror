@@ -1,0 +1,12 @@
+{
+  "mirror_metadata": true,
+  "mirror_issues": false,
+  "mirror_pull_requests": false,
+  "mirror_labels": false,
+  "mirror_milestones": false,
+  "mirror_wiki": false,
+  "mirror_releases": false,
+  "last_mirror_timestamp": 1741891512,
+  "last_mirror_date": "2025-03-13 18:45:12",
+  "last_mirror_log": "mirror-2025-03-13.log"
+}

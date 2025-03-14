@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Configuration</h1>
+        <a href="/" class="btn btn-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Back to Home
+        </a>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear"></i> Mirror Scheduler Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/config" method="post">
+                    <div class="mb-3">
+                        <label for="mirror_interval" class="form-label">Mirror Interval (hours)</label>
+                        <input type="number" class="form-control" id="mirror_interval" name="mirror_interval" 
+                               value="{{ config.mirror_interval }}" min="1" required>
+                        <div class="form-text">How often the mirror script should run automatically (in hours)</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="scheduler_enabled" name="scheduler_enabled" 
+                               {% if config.scheduler_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="scheduler_enabled">Enable Scheduler</label>
+                        <div class="form-text">When enabled, the mirror script will run automatically at the specified interval</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="log_level" class="form-label">Logging Level</label>
+                        <select class="form-select" id="log_level" name="log_level">
+                            {% for level in valid_log_levels %}
+                                <option value="{{ level }}" {% if config.log_level == level %}selected{% endif %}>{{ level }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <ul class="mb-0 ps-3">
+                                <li><strong>DEBUG</strong>: Detailed information, typically of interest only when diagnosing problems</li>
+                                <li><strong>INFO</strong>: Confirmation that things are working as expected</li>
+                                <li><strong>WARNING</strong>: Indication that something unexpected happened, but the application is still working</li>
+                                <li><strong>ERROR</strong>: Due to a more serious problem, the application has not been able to perform some function</li>
+                                <li><strong>CRITICAL</strong>: A serious error, indicating that the application itself may be unable to continue running</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Configuration
+                    </button>
+                    
+                    <button type="button" id="runNowBtn" class="btn btn-success ms-2">
+                        <i class="bi bi-play"></i> Run Mirror Now
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Scheduler Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Scheduler Status:</strong> 
+                            {% if config.scheduler_enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Mirror Interval:</strong> {{ config.mirror_interval }} hours</p>
+                        <p><strong>Logging Level:</strong> <span class="badge bg-secondary">{{ config.log_level }}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Last Run:</strong> 
+                            {% if config.last_mirror_run %}
+                                {{ config.last_mirror_run|timestamp_to_datetime }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </p>
+                        <p><strong>Next Run:</strong> 
+                            {% if next_run %}
+                                {{ next_run.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% else %}
+                                Not scheduled
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const runNowBtn = document.getElementById('runNowBtn');
+        
+        runNowBtn.addEventListener('click', function() {
+            // Disable button and show loading state
+            runNowBtn.disabled = true;
+            runNowBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
+            
+            // Call the API to run the mirror script
+            fetch('/api/run-now', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Show result
+                if (data.success) {
+                    alert('Mirror script started successfully');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+                
+                // Reset button
+                runNowBtn.disabled = false;
+                runNowBtn.innerHTML = '<i class="bi bi-play"></i> Run Mirror Now';
+                
+                // Reload page to update status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+                
+                // Reset button
+                runNowBtn.disabled = false;
+                runNowBtn.innerHTML = '<i class="bi bi-play"></i> Run Mirror Now';
+            });
+        });
+    });
+</script>
+{% endblock %} 

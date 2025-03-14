@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Repository Configuration - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Repository Configuration</h1>
+        <h3>{{ gitea_owner }}/{{ gitea_repo }}</h3>
+        
+        <div class="mb-3">
+            <a href="/repos" class="btn btn-secondary">Back to Repositories</a>
+            <a href="{{ gitea_url }}/{{ gitea_owner }}/{{ gitea_repo }}" class="btn btn-primary" target="_blank">
+                View in Gitea
+            </a>
+            <a href="https://github.com/{{ github_repo }}" class="btn btn-dark" target="_blank">
+                View on GitHub
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Repository Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>GitHub Repository:</strong> <a href="https://github.com/{{ github_repo }}" target="_blank">{{ github_repo }}</a></p>
+                        <p><strong>Gitea Repository:</strong> <a href="{{ gitea_url }}/{{ gitea_owner }}/{{ gitea_repo }}" target="_blank">{{ gitea_owner }}/{{ gitea_repo }}</a></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <strong>Last Mirror:</strong> {{ config.last_mirror_date|default('Never') }}
+                            {% if config.last_mirror_status == 'success' %}
+                            <span class="badge bg-success">Success</span>
+                            {% elif config.last_mirror_status == 'warning' %}
+                            <span class="badge bg-warning">Warning</span>
+                            {% elif config.last_mirror_status == 'error' %}
+                            <span class="badge bg-danger">Error</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Mirror Type:</strong> Pull Mirror</p>
+                        
+                        {% if config.last_mirror_messages and config.last_mirror_messages|length > 0 %}
+                        <div class="alert {% if config.last_mirror_status == 'error' %}alert-danger{% elif config.last_mirror_status == 'warning' %}alert-warning{% else %}alert-secondary{% endif %} mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Last Mirror Messages:</strong>
+                            </div>
+                            <ul class="mb-0">
+                                {% for message in config.last_mirror_messages %}
+                                <li>
+                                    {% if config.last_mirror_log %}
+                                    <a href="/logs/{{ config.last_mirror_log }}" class="{% if config.last_mirror_status == 'error' %}text-danger{% elif config.last_mirror_status == 'warning' %}text-warning{% endif %}" data-bs-toggle="tooltip" title="Click to view log">
+                                        {{ message }}
+                                    </a>
+                                    {% else %}
+                                    {{ message }}
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Mirroring Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <!-- Custom Switch for Mirror Metadata -->
+                    <div class="form-check mb-3">
+                        <div class="custom-switch-container">
+                            <input type="checkbox" id="mirror_metadata" name="mirror_metadata" class="custom-switch-input" {% if config.mirror_metadata %}checked{% endif %}>
+                            <label for="mirror_metadata" class="custom-switch-label">
+                                <span class="custom-switch-inner"></span>
+                                <span class="custom-switch-switch"></span>
+                            </label>
+                            <span class="ms-2">Mirror Metadata</span>
+                        </div>
+                        <div class="form-text">Enable mirroring of metadata (issues, PRs, labels, etc.) from GitHub to Gitea</div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Metadata Components</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Custom Switch for Mirror Issues -->
+                            <div class="form-check mb-2">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_issues" name="mirror_issues" class="custom-switch-input metadata-component" {% if config.mirror_issues %}checked{% endif %}>
+                                    <label for="mirror_issues" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Issues</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Switch for Mirror Pull Requests -->
+                            <div class="form-check mb-2">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_pull_requests" name="mirror_pull_requests" class="custom-switch-input metadata-component" {% if config.mirror_pull_requests %}checked{% endif %}>
+                                    <label for="mirror_pull_requests" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Pull Requests</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Switch for Mirror Labels -->
+                            <div class="form-check mb-2">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_labels" name="mirror_labels" class="custom-switch-input metadata-component" {% if config.mirror_labels %}checked{% endif %}>
+                                    <label for="mirror_labels" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Labels</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Switch for Mirror Milestones -->
+                            <div class="form-check mb-2">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_milestones" name="mirror_milestones" class="custom-switch-input metadata-component" {% if config.mirror_milestones %}checked{% endif %}>
+                                    <label for="mirror_milestones" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Milestones</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom Switch for Mirror Wiki -->
+                            <div class="form-check mb-2">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_wiki" name="mirror_wiki" class="custom-switch-input metadata-component" {% if config.mirror_wiki %}checked{% endif %}>
+                                    <label for="mirror_wiki" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Wiki</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Switch for Mirror Releases -->
+                    <div class="form-check mb-3">
+                        <div class="custom-switch-container">
+                            <input type="checkbox" id="mirror_releases" name="mirror_releases" class="custom-switch-input" {% if config.mirror_releases %}checked{% endif %}>
+                            <label for="mirror_releases" class="custom-switch-label">
+                                <span class="custom-switch-inner"></span>
+                                <span class="custom-switch-switch"></span>
+                            </label>
+                            <span class="ms-2">Mirror Releases</span>
+                        </div>
+                        <div class="form-text">Enable mirroring of releases from GitHub to Gitea</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Save Configuration</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Manual Actions</h5>
+            </div>
+            <div class="card-body">
+                <form action="/run" method="post" class="mb-3">
+                    <input type="hidden" name="mirror_type" value="specific">
+                    <input type="hidden" name="github_repo" value="{{ github_repo }}">
+                    <input type="hidden" name="gitea_owner" value="{{ gitea_owner }}">
+                    <input type="hidden" name="gitea_repo" value="{{ gitea_repo }}">
+                    <input type="hidden" name="redirect_to_log" value="true">
+                    
+                    <!-- Custom Switch for Include Metadata -->
+                    <div class="form-check mb-3">
+                        <div class="custom-switch-container">
+                            <input type="checkbox" id="mirror_metadata_run" name="mirror_metadata" class="custom-switch-input" {% if config.mirror_metadata %}checked{% endif %}>
+                            <label for="mirror_metadata_run" class="custom-switch-label">
+                                <span class="custom-switch-inner"></span>
+                                <span class="custom-switch-switch"></span>
+                            </label>
+                            <span class="ms-2">Include Metadata</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Switch for Include Releases -->
+                    <div class="form-check mb-3">
+                        <div class="custom-switch-container">
+                            <input type="checkbox" id="mirror_releases_run" name="mirror_releases" class="custom-switch-input" {% if config.mirror_releases %}checked{% endif %}>
+                            <label for="mirror_releases_run" class="custom-switch-label">
+                                <span class="custom-switch-inner"></span>
+                                <span class="custom-switch-switch"></span>
+                            </label>
+                            <span class="ms-2">Include Releases</span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Run Mirror Now</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Destructive Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <strong>Warning!</strong> The actions below are destructive and cannot be undone. Proceed with caution.
+                </div>
+                
+                <h6>Delete All Issues and Pull Requests</h6>
+                <p>This will delete or close all issues and pull requests in the Gitea repository. This is useful for cleaning up duplicate issues.</p>
+                
+                <form action="/repos/{{ gitea_owner }}/{{ gitea_repo }}/delete-issues" method="post" class="mb-3" id="delete-issues-form">
+                    <div class="mb-3">
+                        <label for="confirmation" class="form-label">Type <strong>{{ gitea_owner }}/{{ gitea_repo }}</strong> to confirm deletion:</label>
+                        <input type="text" class="form-control" id="confirmation" name="confirmation" required>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger" id="delete-issues-btn">Delete All Issues and PRs</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Custom switch styles */
+    .custom-switch-container {
+        display: flex;
+        align-items: center;
+    }
+    
+    .custom-switch-input {
+        height: 0;
+        width: 0;
+        visibility: hidden;
+        position: absolute;
+    }
+    
+    .custom-switch-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        width: 60px;
+        height: 30px;
+        background: #6c757d;
+        border-radius: 100px;
+        position: relative;
+        transition: background-color 0.2s;
+        margin: 0;
+    }
+    
+    .custom-switch-label .custom-switch-inner {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 100px;
+        position: relative;
+    }
+    
+    .custom-switch-label .custom-switch-inner:before,
+    .custom-switch-label .custom-switch-inner:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .custom-switch-label .custom-switch-inner:before {
+        content: "OFF";
+        left: 10px;
+    }
+    
+    .custom-switch-label .custom-switch-inner:after {
+        content: "ON";
+        right: 10px;
+        opacity: 0;
+    }
+    
+    .custom-switch-label .custom-switch-switch {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 26px;
+        height: 26px;
+        border-radius: 45px;
+        transition: 0.2s;
+        background: #fff;
+        box-shadow: 0 0 2px 0 rgba(10, 10, 10, 0.29);
+    }
+    
+    .custom-switch-input:checked + .custom-switch-label {
+        background: #198754;
+    }
+    
+    .custom-switch-input:checked + .custom-switch-label .custom-switch-inner:before {
+        opacity: 0;
+    }
+    
+    .custom-switch-input:checked + .custom-switch-label .custom-switch-inner:after {
+        opacity: 1;
+    }
+    
+    .custom-switch-input:checked + .custom-switch-label .custom-switch-switch {
+        left: calc(100% - 2px);
+        transform: translateX(-100%);
+    }
+    
+    .custom-switch-input:disabled + .custom-switch-label {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Dark mode specific styles */
+    [data-bs-theme="dark"] .custom-switch-label {
+        background: #343a40;
+    }
+    
+    [data-bs-theme="dark"] .custom-switch-input:checked + .custom-switch-label {
+        background: #00bc8c;
+    }
+    
+    [data-bs-theme="dark"] .custom-switch-label .custom-switch-switch {
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mirrorMetadataSwitch = document.getElementById('mirror_metadata');
+        const metadataComponents = document.querySelectorAll('.metadata-component');
+        
+        // Function to update the state of metadata components
+        function updateComponentsState() {
+            const isEnabled = mirrorMetadataSwitch.checked;
+            metadataComponents.forEach(component => {
+                component.disabled = !isEnabled;
+                
+                // Update the visual state of the label
+                const label = component.nextElementSibling;
+                if (!isEnabled) {
+                    label.style.opacity = "0.5";
+                    label.style.cursor = "not-allowed";
+                } else {
+                    label.style.opacity = "1";
+                    label.style.cursor = "pointer";
+                }
+            });
+        }
+        
+        // Initial state for metadata components
+        updateComponentsState();
+        
+        // Update on change
+        mirrorMetadataSwitch.addEventListener('change', updateComponentsState);
+        
+        // Confirmation for delete issues form
+        const deleteIssuesForm = document.getElementById('delete-issues-form');
+        if (deleteIssuesForm) {
+            deleteIssuesForm.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to delete all issues and pull requests? This action cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                return true;
+            });
+        }
+    });
+</script>
+{% endblock %} 

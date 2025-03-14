@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>GitHub to Gitea Mirror</h1>
+        <p class="lead">Mirror GitHub releases to your Gitea instance</p>
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+            <a href="/run" class="btn btn-primary">Run Mirror</a>
+            <a href="/repos" class="btn btn-secondary">View Repositories</a>
+        </div>
+        
+        <h2>Recent Logs</h2>
+        {% if log_files %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in log_files %}
+                            <tr>
+                                <td>{{ log.date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ log.filename }}</td>
+                                <td>{{ "%.2f"|format(log.size) }} KB</td>
+                                <td>
+                                    <a href="/logs/{{ log.filename }}" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No log files found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

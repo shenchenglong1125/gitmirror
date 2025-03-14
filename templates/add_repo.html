@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Add Repository - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Add Repository</h1>
+        
+        <div class="mb-3">
+            <a href="/repos" class="btn btn-secondary">Back to Repositories</a>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Repository Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="add-repo-form">
+                    <div class="mb-3">
+                        <label for="github_repo" class="form-label">GitHub Repository</label>
+                        <input type="text" class="form-control" id="github_repo" name="github_repo" 
+                               placeholder="owner/repo or https://github.com/owner/repo" required
+                               value="{{ github_repo if github_repo else '' }}">
+                        <div class="form-text">Enter the GitHub repository in the format owner/repo or the full URL</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="gitea_owner" class="form-label">Gitea Owner</label>
+                        <input type="text" class="form-control" id="gitea_owner" name="gitea_owner" 
+                               placeholder="owner" required
+                               value="{{ gitea_owner if gitea_owner else '' }}">
+                        <div class="form-text">Enter the Gitea owner username</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="gitea_repo" class="form-label">Gitea Repository</label>
+                        <input type="text" class="form-control" id="gitea_repo" name="gitea_repo" 
+                               placeholder="repo" required
+                               value="{{ gitea_repo if gitea_repo else '' }}">
+                        <div class="form-text">Enter the Gitea repository name</div>
+                    </div>
+                    
+                    {% if show_force_recreate %}
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">Repository Already Exists</h5>
+                        <p>The repository <strong>{{ gitea_owner }}/{{ gitea_repo }}</strong> already exists in Gitea but is not configured as a mirror.</p>
+                        <p>Since the repository is empty, you can force recreate it as a mirror by checking the option below.</p>
+                        <div class="form-check mb-3">
+                            <div class="custom-switch-container">
+                                <input type="checkbox" id="force_recreate" name="force_recreate" class="custom-switch-input">
+                                <label for="force_recreate" class="custom-switch-label">
+                                    <span class="custom-switch-inner"></span>
+                                    <span class="custom-switch-switch"></span>
+                                </label>
+                                <span class="ms-2">Force Recreate as Mirror</span>
+                            </div>
+                            <div class="form-text">This will delete the existing repository and recreate it as a mirror.</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Mirroring Options</h6>
+                            <div class="form-text">All options are disabled by default for safety. Enable only what you need.</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_metadata" name="mirror_metadata" class="custom-switch-input"
+                                           {% if config and config.mirror_metadata %}checked{% endif %}>
+                                    <label for="mirror_metadata" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Metadata</span>
+                                </div>
+                                <div class="form-text">Enable mirroring of metadata (issues, PRs, labels, etc.) from GitHub to Gitea</div>
+                            </div>
+                            
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Metadata Components</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check mb-2">
+                                        <div class="custom-switch-container">
+                                            <input type="checkbox" id="mirror_issues" name="mirror_issues" class="custom-switch-input metadata-component" 
+                                                   {% if config and config.mirror_issues %}checked{% endif %} disabled>
+                                            <label for="mirror_issues" class="custom-switch-label">
+                                                <span class="custom-switch-inner"></span>
+                                                <span class="custom-switch-switch"></span>
+                                            </label>
+                                            <span class="ms-2">Mirror Issues</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-2">
+                                        <div class="custom-switch-container">
+                                            <input type="checkbox" id="mirror_pull_requests" name="mirror_pull_requests" class="custom-switch-input metadata-component" 
+                                                   {% if config and config.mirror_pull_requests %}checked{% endif %} disabled>
+                                            <label for="mirror_pull_requests" class="custom-switch-label">
+                                                <span class="custom-switch-inner"></span>
+                                                <span class="custom-switch-switch"></span>
+                                            </label>
+                                            <span class="ms-2">Mirror Pull Requests</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-2">
+                                        <div class="custom-switch-container">
+                                            <input type="checkbox" id="mirror_labels" name="mirror_labels" class="custom-switch-input metadata-component" 
+                                                   {% if config and config.mirror_labels %}checked{% endif %} disabled>
+                                            <label for="mirror_labels" class="custom-switch-label">
+                                                <span class="custom-switch-inner"></span>
+                                                <span class="custom-switch-switch"></span>
+                                            </label>
+                                            <span class="ms-2">Mirror Labels</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-2">
+                                        <div class="custom-switch-container">
+                                            <input type="checkbox" id="mirror_milestones" name="mirror_milestones" class="custom-switch-input metadata-component" 
+                                                   {% if config and config.mirror_milestones %}checked{% endif %} disabled>
+                                            <label for="mirror_milestones" class="custom-switch-label">
+                                                <span class="custom-switch-inner"></span>
+                                                <span class="custom-switch-switch"></span>
+                                            </label>
+                                            <span class="ms-2">Mirror Milestones</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-2">
+                                        <div class="custom-switch-container">
+                                            <input type="checkbox" id="mirror_wiki" name="mirror_wiki" class="custom-switch-input metadata-component" 
+                                                   {% if config and config.mirror_wiki %}checked{% endif %} disabled>
+                                            <label for="mirror_wiki" class="custom-switch-label">
+                                                <span class="custom-switch-inner"></span>
+                                                <span class="custom-switch-switch"></span>
+                                            </label>
+                                            <span class="ms-2">Mirror Wiki</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <div class="custom-switch-container">
+                                    <input type="checkbox" id="mirror_releases" name="mirror_releases" class="custom-switch-input"
+                                           {% if config and config.mirror_releases %}checked{% endif %}>
+                                    <label for="mirror_releases" class="custom-switch-label">
+                                        <span class="custom-switch-inner"></span>
+                                        <span class="custom-switch-switch"></span>
+                                    </label>
+                                    <span class="ms-2">Mirror Releases</span>
+                                </div>
+                                <div class="form-text">Enable mirroring of releases from GitHub to Gitea</div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Add Repository</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mirrorMetadataSwitch = document.getElementById('mirror_metadata');
+        const metadataComponents = document.querySelectorAll('.metadata-component');
+        
+        function updateComponentsState() {
+            const isEnabled = mirrorMetadataSwitch.checked;
+            metadataComponents.forEach(component => {
+                component.disabled = !isEnabled;
+            });
+        }
+        
+        // Initial state
+        updateComponentsState();
+        
+        // Update on change
+        mirrorMetadataSwitch.addEventListener('change', updateComponentsState);
+    });
+</script>
+{% endblock %} 

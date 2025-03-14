@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Log: {{ filename }} - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Log: {{ filename }}</h1>
+        
+        <div class="mb-3">
+            <a href="/logs" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> Back to Logs
+            </a>
+            <a href="/repos" class="btn btn-secondary">View Repositories</a>
+            <button id="toggle-refresh" class="btn btn-outline-primary">Auto-refresh: ON</button>
+            <span id="refresh-status" class="ms-2">Refreshing every 5 seconds</span>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Log Content</h5>
+                <div>
+                    <button id="scroll-to-bottom" class="btn btn-sm btn-outline-secondary">Scroll to Bottom</button>
+                    <button id="scroll-to-top" class="btn btn-sm btn-outline-secondary">Scroll to Top</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <pre id="log-content" class="log-content" style="max-height: 800px; overflow-y: auto;">{{ log_content }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logContent = document.getElementById('log-content');
+        const toggleRefreshBtn = document.getElementById('toggle-refresh');
+        const refreshStatus = document.getElementById('refresh-status');
+        const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+        let autoRefresh = true;
+        let refreshInterval = 5000; // 5 seconds
+        let refreshTimer;
+        
+        // Function to refresh log content
+        function refreshLog() {
+            fetch('/api/logs/{{ filename }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.content) {
+                        logContent.textContent = data.content;
+                        // Scroll to bottom if we were already at the bottom
+                        if (isScrolledToBottom()) {
+                            scrollToBottom();
+                        }
+                    }
+                })
+                .catch(error => console.error('Error refreshing log:', error));
+        }
+        
+        // Check if scrolled to bottom
+        function isScrolledToBottom() {
+            return Math.abs(logContent.scrollHeight - logContent.clientHeight - logContent.scrollTop) < 10;
+        }
+        
+        // Scroll to bottom function
+        function scrollToBottom() {
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        // Scroll to top function
+        function scrollToTop() {
+            logContent.scrollTop = 0;
+        }
+        
+        // Start auto-refresh
+        function startAutoRefresh() {
+            refreshTimer = setInterval(refreshLog, refreshInterval);
+            toggleRefreshBtn.textContent = 'Auto-refresh: ON';
+            toggleRefreshBtn.classList.remove('btn-outline-secondary');
+            toggleRefreshBtn.classList.add('btn-outline-primary');
+            refreshStatus.textContent = `Refreshing every ${refreshInterval/1000} seconds`;
+        }
+        
+        // Stop auto-refresh
+        function stopAutoRefresh() {
+            clearInterval(refreshTimer);
+            toggleRefreshBtn.textContent = 'Auto-refresh: OFF';
+            toggleRefreshBtn.classList.remove('btn-outline-primary');
+            toggleRefreshBtn.classList.add('btn-outline-secondary');
+            refreshStatus.textContent = 'Auto-refresh is disabled';
+        }
+        
+        // Toggle auto-refresh
+        toggleRefreshBtn.addEventListener('click', function() {
+            autoRefresh = !autoRefresh;
+            if (autoRefresh) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        });
+        
+        // Scroll to bottom button
+        scrollToBottomBtn.addEventListener('click', scrollToBottom);
+        
+        // Scroll to top button
+        scrollToTopBtn.addEventListener('click', scrollToTop);
+        
+        // Initial scroll to bottom
+        scrollToBottom();
+        
+        // Start auto-refresh by default
+        startAutoRefresh();
+    });
+</script>
+{% endblock %} 

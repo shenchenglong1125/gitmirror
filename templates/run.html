@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Run Mirror - GitHub to Gitea Mirror{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Run Mirror</h1>
+        <a href="/" class="btn btn-secondary mb-3">Back to Home</a>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Mirror Options</h5>
+                
+                <form action="/run" method="post">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mirror_type" id="mirror_all" value="all" checked>
+                            <label class="form-check-label" for="mirror_all">
+                                Mirror all repositories (auto-discovery)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mirror_type" id="mirror_specific" value="specific">
+                            <label class="form-check-label" for="mirror_specific">
+                                Mirror specific repository
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="specific_repo_fields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="github_repo" class="form-label">GitHub Repository (owner/repo)</label>
+                            <input type="text" class="form-control" id="github_repo" name="github_repo" placeholder="e.g., octocat/Hello-World">
+                        </div>
+                        <div class="mb-3">
+                            <label for="gitea_owner" class="form-label">Gitea Owner</label>
+                            <input type="text" class="form-control" id="gitea_owner" name="gitea_owner" placeholder="e.g., admin">
+                        </div>
+                        <div class="mb-3">
+                            <label for="gitea_repo" class="form-label">Gitea Repository</label>
+                            <input type="text" class="form-control" id="gitea_repo" name="gitea_repo" placeholder="e.g., Hello-World">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="card-subtitle mb-2 text-muted">Metadata Mirroring Options</h6>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="mirror_metadata" id="mirror_metadata" checked>
+                            <label class="form-check-label" for="mirror_metadata">
+                                Mirror metadata
+                            </label>
+                            <div class="form-text">Enable mirroring of metadata (issues, PRs, labels, etc.) from GitHub to Gitea</div>
+                        </div>
+                        
+                        <div id="metadata_options" class="ms-4 mt-3">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input metadata-option" type="checkbox" name="mirror_issues" id="mirror_issues" checked>
+                                <label class="form-check-label" for="mirror_issues">Mirror Issues</label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input metadata-option" type="checkbox" name="mirror_pull_requests" id="mirror_pull_requests" checked>
+                                <label class="form-check-label" for="mirror_pull_requests">Mirror Pull Requests</label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input metadata-option" type="checkbox" name="mirror_labels" id="mirror_labels" checked>
+                                <label class="form-check-label" for="mirror_labels">Mirror Labels</label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input metadata-option" type="checkbox" name="mirror_milestones" id="mirror_milestones" checked>
+                                <label class="form-check-label" for="mirror_milestones">Mirror Milestones</label>
+                            </div>
+                            
+                            <div class="form-check form-switch">
+                                <input class="form-check-input metadata-option" type="checkbox" name="mirror_wiki" id="mirror_wiki" checked>
+                                <label class="form-check-label" for="mirror_wiki">Mirror Wiki</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Run Mirror</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mirrorTypeRadios = document.querySelectorAll('input[name="mirror_type"]');
+        const specificRepoFields = document.getElementById('specific_repo_fields');
+        const mirrorMetadataSwitch = document.getElementById('mirror_metadata');
+        const metadataOptions = document.querySelectorAll('.metadata-option');
+        
+        // Function to toggle specific repo fields visibility
+        function toggleSpecificRepoFields() {
+            const selectedValue = document.querySelector('input[name="mirror_type"]:checked').value;
+            specificRepoFields.style.display = selectedValue === 'specific' ? 'block' : 'none';
+        }
+        
+        // Function to toggle metadata options
+        function toggleMetadataOptions() {
+            const isEnabled = mirrorMetadataSwitch.checked;
+            metadataOptions.forEach(option => {
+                option.disabled = !isEnabled;
+            });
+            document.getElementById('metadata_options').style.opacity = isEnabled ? '1' : '0.5';
+        }
+        
+        // Add event listeners to radio buttons
+        mirrorTypeRadios.forEach(radio => {
+            radio.addEventListener('change', toggleSpecificRepoFields);
+        });
+        
+        // Add event listener to metadata switch
+        mirrorMetadataSwitch.addEventListener('change', toggleMetadataOptions);
+        
+        // Initial toggles
+        toggleSpecificRepoFields();
+        toggleMetadataOptions();
+    });
+</script>
+{% endblock %} 
