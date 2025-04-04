@@ -1,0 +1,8 @@
+{
+    "scheduler_enabled": false,
+    "mirror_interval": 8,
+    "last_run": null,
+    "next_run": null,
+    "log_level": "INFO",
+    "repositories": {}
+}

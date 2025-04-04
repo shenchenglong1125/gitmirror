@@ -30,4 +30,5 @@ services:
     restart: "no"
 
 volumes:
-  gitmirror_logs: 
+  gitmirror_logs:
+  

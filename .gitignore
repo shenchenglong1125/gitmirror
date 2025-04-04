@@ -4,9 +4,6 @@
 .env.*
 !.env.example
 
-# Configuration files
-config.json
-
 # Logs
 logs/
 *.log
