@@ -1,9 +1,0 @@
-{
-    "scheduler_enabled": false,
-    "mirror_interval": 8,
-    "last_run": null,
-    "next_run": 1741959205,
-    "log_level": "INFO",
-    "mirror_interval_hours": 8,
-    "last_mirror_run": 1741806267.980561
-}

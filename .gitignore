@@ -4,6 +4,9 @@
 .env.*
 !.env.example
 
+# Configuration files
+config.json
+
 # Logs
 logs/
 *.log
@@ -53,4 +56,10 @@ venv.bak/
 .DS_Store
 
 # Docker artifacts
-.dockerignore 
+.dockerignore
+
+# Data directory
+data/
+
+# Docker
+.docker/ 

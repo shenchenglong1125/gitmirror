@@ -1,9 +1,0 @@
-{
-  "mirror_metadata": false,
-  "mirror_issues": false,
-  "mirror_pull_requests": false,
-  "mirror_labels": false,
-  "mirror_milestones": false,
-  "mirror_wiki": false,
-  "mirror_releases": true
-}

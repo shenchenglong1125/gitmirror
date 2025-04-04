@@ -4,7 +4,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./logs:/app/logs
+      - gitmirror_logs:/app/logs
       - ./config.json:/app/config.json
       - ./data/config:/app/data/config
     env_file:
@@ -21,10 +21,13 @@ services:
   mirror:
     build: .
     volumes:
-      - ./logs:/app/logs
+      - gitmirror_logs:/app/logs
       - ./config.json:/app/config.json
       - ./data/config:/app/data/config
     env_file:
       - .env
     command: mirror
-    restart: "no" 
+    restart: "no"
+
+volumes:
+  gitmirror_logs: 

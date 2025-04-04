@@ -36,19 +36,21 @@ COPY . .
 # Install the package in development mode
 RUN pip install -e .
 
-# Create logs and config directories
-RUN mkdir -p logs
-RUN mkdir -p /app/data/config
+# Create a non-root user for security
+RUN groupadd -g ${PGID:-1000} appgroup && \
+    useradd -m -u ${PUID:-1000} -g appgroup appuser && \
+    chown -R appuser:appgroup /app && \
+    chmod +x start.sh
+
+# Create config directory
+RUN mkdir -p /app/data/config && \
+    chown -R appuser:appgroup /app/data/config
+
+USER appuser
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV GITMIRROR_CONFIG_DIR=/app/data/config
-
-# Create a non-root user for security
-RUN useradd -m appuser && \
-    chown -R appuser:appuser /app && \
-    chmod +x start.sh
-USER appuser
 
 # Expose port for web UI
 EXPOSE 5000

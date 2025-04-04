@@ -11,9 +11,9 @@ from .gitea.repository import (
 from .gitea.release import create_gitea_release
 from .gitea.metadata import mirror_github_metadata
 from .utils.config import get_repo_config, save_repo_config
-from .utils.logging import get_current_log_filename
+from .utils.logging import setup_logging, get_current_log_filename
 
-logger = logging.getLogger('github-gitea-mirror')
+logger = setup_logging(service_name='mirror')
 
 def mirror_repository(github_token, gitea_token, gitea_url, github_repo, gitea_owner, gitea_repo, skip_repo_config=False, mirror_metadata=None, mirror_releases=None, repo_config=None, force_recreate=False):
     """Set up a repository as a pull mirror from GitHub to Gitea and sync releases"""

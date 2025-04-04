@@ -1,13 +1,14 @@
 import os
 import logging
-from datetime import datetime
-from logging.handlers import RotatingFileHandler
+from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
-def setup_logging(log_level='INFO'):
+def setup_logging(log_level='INFO', service_name='mirror'):
     """Set up logging configuration with log rotation
     
     Args:
         log_level (str): The logging level to use (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        service_name (str): The name of the service (web or mirror)
         
     Returns:
         logging.Logger: The configured logger
@@ -15,8 +16,8 @@ def setup_logging(log_level='INFO'):
     log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')
     os.makedirs(log_dir, exist_ok=True)
     
-    timestamp = datetime.now().strftime('%Y-%m-%d')
-    log_file = os.path.join(log_dir, f'mirror-{timestamp}.log')
+    # Get log retention period from environment variable (default to 30 days)
+    retention_days = int(os.getenv('LOG_RETENTION_DAYS', '30'))
     
     # Convert string log level to logging constant
     numeric_level = getattr(logging, log_level.upper(), None)
@@ -29,11 +30,13 @@ def setup_logging(log_level='INFO'):
         level=numeric_level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            # Use RotatingFileHandler instead of FileHandler for log rotation
-            RotatingFileHandler(
-                log_file,
-                maxBytes=10 * 1024 * 1024,  # 10 MB
-                backupCount=5,  # Keep 5 backup files
+            # Use TimedRotatingFileHandler for daily rotation and retention
+            TimedRotatingFileHandler(
+                os.path.join(log_dir, f'{service_name}.log'),
+                when='midnight',
+                interval=1,  # daily
+                backupCount=retention_days,  # keep logs for specified number of days
+                encoding='utf-8'
             ),
             logging.StreamHandler()
         ]
@@ -43,7 +46,7 @@ def setup_logging(log_level='INFO'):
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     
-    return logging.getLogger('github-gitea-mirror')
+    return logging.getLogger(f'github-gitea-mirror-{service_name}')
 
 def get_current_log_filename(logger):
     """Get the current log file name from the logger handlers
@@ -55,7 +58,7 @@ def get_current_log_filename(logger):
         str: The basename of the log file, or a fallback name if not found
     """
     try:
-        # Check for both RotatingFileHandler and regular FileHandler
+        # Check for both RotatingFileHandler and TimedRotatingFileHandler
         for handler in logger.handlers:
             if hasattr(handler, 'baseFilename'):
                 return os.path.basename(handler.baseFilename)

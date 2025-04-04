@@ -1,0 +1,24 @@
+{
+    "scheduler_enabled": false,
+    "mirror_interval": 8,
+    "last_run": null,
+    "next_run": null,
+    "log_level": "INFO",
+    "repositories": {
+        "owner/repo": {
+            "gitea_owner": "gitea_owner",
+            "gitea_repo": "gitea_repo",
+            "mirror_issues": true,
+            "mirror_pull_requests": true,
+            "mirror_labels": true,
+            "mirror_milestones": true,
+            "mirror_wiki": false,
+            "mirror_releases": false,
+            "last_mirror_timestamp": null,
+            "last_mirror_date": null,
+            "last_mirror_status": null,
+            "last_mirror_messages": [],
+            "last_mirror_log": null
+        }
+    }
+} 

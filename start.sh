@@ -1,14 +1,6 @@
 #!/bin/bash
 set -e
 
-# Create necessary directories
-mkdir -p /app/logs
-mkdir -p /app/data/config
-
-# Set default permissions
-chmod -R 755 /app/logs
-chmod -R 755 /app/data/config
-
 # Generate a random SECRET_KEY if not provided
 if [ -z "$SECRET_KEY" ]; then
     echo "No SECRET_KEY found in environment, generating a random one..."

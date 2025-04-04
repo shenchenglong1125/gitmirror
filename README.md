@@ -73,6 +73,9 @@ GITEA_URL=https://your-gitea-instance.com
 # This key is used to secure Flask sessions and flash messages
 # If not provided, a random key will be automatically generated at container start
 # SECRET_KEY=your_secret_key
+
+# Log retention days (OPTIONAL, defaults to 30 days)
+LOG_RETENTION_DAYS=30
 ```
 
 ### Authentication for Private Repositories
@@ -123,6 +126,44 @@ docker-compose logs -f
 ```bash
 docker-compose down
 ```
+
+### Using Bind Mounts for Logs
+
+By default, logs are stored in a Docker volume for better permission handling. If you prefer to use bind mounts instead (to access logs directly on the host filesystem), you can modify the `docker-compose.yml` file:
+
+1. Change the volume configuration from:
+```yaml
+volumes:
+  - gitmirror_logs:/app/logs
+```
+
+to:
+```yaml
+volumes:
+  - ./logs:/app/logs
+```
+
+2. Create the logs directory with the correct permissions:
+```bash
+mkdir -p logs
+chmod 755 logs
+```
+
+3. Update the container user to match your host user's UID/GID:
+```yaml
+environment:
+  - PUID=$(id -u)
+  - PGID=$(id -g)
+user: "${PUID}:${PGID}"
+```
+
+4. Remove the `volumes` section at the bottom of the file that defines `gitmirror_logs`
+
+This setup will:
+- Store logs directly in the `logs` directory on your host
+- Allow you to access logs without using Docker commands
+- Maintain proper permissions for the container to write logs
+- Keep the same log rotation and retention settings
 
 ### Using Docker Directly
 
@@ -293,7 +334,17 @@ When an error occurs during mirroring, you can click on the error message to vie
 
 ## Logs
 
-Logs are stored in the `logs` directory with a date-based naming convention. The web UI provides a convenient way to view these logs, with direct links from error messages.
+Logs are stored in the `logs` directory and are:
+- Rotated daily at midnight
+- Retained for a configurable number of days (default: 30)
+- Separated by service (web and mirror)
+- Viewable through the web UI
+
+Log files follow this naming convention:
+- Current log file: `web.log` or `mirror.log`
+- Rotated log files: `web.log.2024-03-20`, `web.log.2024-03-19`, etc.
+
+The log retention period can be configured using the `LOG_RETENTION_DAYS` environment variable in your `.env` file.
 
 ## Development and Testing
 

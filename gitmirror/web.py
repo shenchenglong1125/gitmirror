@@ -26,7 +26,7 @@ from .gitea.metadata import mirror_github_metadata, delete_all_issues_and_prs
 from .mirror import mirror_repository, process_all_repositories
 
 # Set up logging
-logger = logging.getLogger('github-gitea-mirror')
+logger = setup_logging(service_name='web')
 
 # Create Flask app
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'templates'))
