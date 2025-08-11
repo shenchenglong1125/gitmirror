@@ -546,19 +546,15 @@ def config_page():
 @app.route('/api/run-now', methods=['POST'])
 def api_run_now():
     """Run mirror script immediately via API"""
-    # Get metadata mirroring option from request
-    data = request.get_json() or {}
-    mirror_metadata = data.get('mirror_metadata')  # Can be None to use repo-specific config
-    mirror_releases = data.get('mirror_releases')  # Can be None to use repo-specific config
+    data = request.get_json(silent=True) or {}
+    mirror_metadata = data.get('mirror_metadata')
+    mirror_releases = data.get('mirror_releases')
     
     def run_in_thread():
-        # Load configuration from environment variables
         env_config = load_config()
         github_token = env_config['github_token']
         gitea_token = env_config['gitea_token']
         gitea_url = env_config['gitea_url']
-        
-        # Run process_all_repositories directly
         success = process_all_repositories(
             github_token,
             gitea_token,
@@ -568,12 +564,11 @@ def api_run_now():
         )
         logger.info(f"Mirror script completed with success={success}")
     
-    # Run in a separate thread to avoid blocking the response
     thread = threading.Thread(target=run_in_thread)
     thread.daemon = True
     thread.start()
     
-    return jsonify({'status': 'started'})
+    return jsonify({'success': True, 'message': 'Mirror script started'})
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_repository():
@@ -944,4 +939,4 @@ def main():
     app.run(host='0.0.0.0', port=5000, debug=False)
 
 if __name__ == '__main__':
-    main() 
+    main()
