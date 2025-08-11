@@ -118,7 +118,8 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({}) // 添加这一行，发送一个空的 JSON 对象
             })
             .then(response => response.json())
             .then(data => {
